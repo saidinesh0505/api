@@ -1,0 +1,27 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<mule xmlns:json="http://www.mulesoft.org/schema/mule/json"
+	xmlns:http="http://www.mulesoft.org/schema/mule/http"
+	xmlns:db="http://www.mulesoft.org/schema/mule/db" xmlns="http://www.mulesoft.org/schema/mule/core" xmlns:doc="http://www.mulesoft.org/schema/mule/documentation" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="
+http://www.mulesoft.org/schema/mule/json http://www.mulesoft.org/schema/mule/json/current/mule-json.xsd 
+http://www.mulesoft.org/schema/mule/http http://www.mulesoft.org/schema/mule/http/current/mule-http.xsd http://www.mulesoft.org/schema/mule/core http://www.mulesoft.org/schema/mule/core/current/mule.xsd http://www.mulesoft.org/schema/mule/db http://www.mulesoft.org/schema/mule/db/current/mule-db.xsd">
+    <db:config name="Database_Config" doc:name="Database Config">
+        <db:generic-connection url="jdbc:mysql://localhost:3306/ecommerce" user="root" password="password" driverClassName="com.mysql.cj.jdbc.Driver"/>
+    </db:config>
+    
+    <flow name="getAllProductsFlow">
+        <http:listener config-ref="HTTP_Listener_config" path="/products" doc:name="HTTP"/>
+        <db:select doc:name="Database">
+            <db:sql>SELECT * FROM products</db:sql>
+        </db:select>
+        <json:object-to-json-transformer doc:name="Object to JSON"/>
+    </flow>
+    
+    <flow name="addProductFlow">
+        <http:listener config-ref="HTTP_Listener_config" path="/products" method="POST" doc:name="HTTP"/>
+        <json:json-to-object-transformer returnClass="java.util.Map" doc:name="JSON to Object"/>
+        <db:insert doc:name="Database">
+            <db:sql>INSERT INTO products (name, price, quantity) VALUES (#[payload.name], #[payload.price], #[payload.quantity])</db:sql>
+        </db:insert>
+        <set-payload value="Product added successfully" doc:name="Set Payload"/>
+    </flow>
+</mule>
